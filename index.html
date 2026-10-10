@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f2eb">
+  <title>Tic-Tac-Toe</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20231f;
+      --muted: #777a72;
+      --paper: #f4f2eb;
+      --board: #fffefa;
+      --line: #d9d8cf;
+      --red: #e85b42;
+      --teal: #187c73;
+      --gold: #f3c65e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--paper);
+      background-image: radial-gradient(#d6d3c8 0.7px, transparent 0.7px);
+      background-size: 18px 18px;
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 28px 18px;
+    }
+
+    .game {
+      width: min(100%, 480px);
+      animation: arrive 420ms ease-out both;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .wordmark {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .round-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .heading {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      margin: 9px 0 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .mode-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 254, 250, 0.72);
+    }
+
+    .mode-button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .mode-button:hover { color: var(--ink); }
+    .mode-button:active { transform: scale(0.98); }
+    .mode-button[aria-pressed="true"] {
+      background: var(--ink);
+      color: white;
+    }
+
+    .difficulty-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: -8px 0 16px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .difficulty-control select {
+      min-width: 128px;
+      min-height: 36px;
+      padding: 0 30px 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--board);
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .difficulty-control select:disabled { color: var(--muted); cursor: default; }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .player {
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 254, 250, 0.76);
+      transition: border-color 180ms ease, background 180ms ease;
+    }
+
+    .player.active { border-color: var(--ink); background: var(--board); }
+    .player:last-child { text-align: right; }
+
+    .player-topline {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .player:last-child .player-topline { justify-content: flex-end; }
+
+    .mark {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .mark.x { color: var(--red); }
+    .mark.o { color: var(--teal); }
+
+    .score {
+      display: block;
+      margin-top: 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .versus {
+      color: #a1a197;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .status .x { color: var(--red); }
+    .status .o { color: var(--teal); }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255, 254, 250, 0.72);
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      min-width: 0;
+      border: 1px solid #e3e1d8;
+      border-radius: 6px;
+      background: var(--board);
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 68px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    .cell:not(:disabled):hover {
+      border-color: #aaa99f;
+      background: #fffdf5;
+      transform: translateY(-2px);
+    }
+
+    .cell:disabled { cursor: default; }
+    .cell.x { color: var(--red); }
+    .cell.o { color: var(--teal); }
+    .cell.winning { border-color: var(--gold); background: #fff5d8; }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 17px;
+    }
+
+    .reset-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--board);
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    .reset-button:hover { background: #fff5d8; }
+    .reset-button:active { transform: scale(0.98); }
+    button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media (max-height: 700px) {
+      body { place-items: start center; padding-block: 14px; }
+      .masthead { margin-bottom: 12px; }
+      .intro { margin: 7px 0 10px; }
+      .mode-picker { margin-bottom: 8px; }
+      .difficulty-control { margin-bottom: 10px; }
+      .scoreboard { margin-bottom: 8px; }
+      .status { margin-bottom: 8px; }
+      .board { width: min(100%, 240px); gap: 7px; padding: 8px; margin-inline: auto; }
+      .actions { margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" aria-labelledby="game-title">
+    <header class="masthead">
+      <div class="wordmark">little games <span aria-hidden="true">/</span> 01</div>
+      <div class="round-label" id="round-label">Round 1</div>
+    </header>
+
+    <h1 class="heading" id="game-title">Tic-Tac-Toe</h1>
+    <p class="intro">Three in a row. Make your move.</p>
+
+    <div class="mode-picker" role="group" aria-label="Game mode">
+      <button class="mode-button" type="button" data-mode="two-player" aria-pressed="false">Two players</button>
+      <button class="mode-button" type="button" data-mode="ai" aria-pressed="true">Play the computer</button>
+    </div>
+
+    <div class="difficulty-control">
+      <label for="difficulty">AI difficulty</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+
+    <section class="scoreboard" aria-label="Score">
+      <div class="player active" id="player-x">
+        <div class="player-topline"><span class="mark x">X</span><span id="name-x">Player 1</span></div>
+        <span class="score" id="score-x">0</span>
+      </div>
+      <span class="versus" aria-hidden="true">vs</span>
+      <div class="player" id="player-o">
+        <div class="player-topline"><span class="mark o">O</span><span id="name-o">Player 2</span></div>
+        <span class="score" id="score-o">0</span>
+      </div>
+    </section>
+
+    <p class="status" id="status" role="status" aria-live="polite">Your turn, <span class="x">X</span></p>
+
+    <div class="board" id="board" role="group" aria-label="Tic-Tac-Toe board">
+      <button class="cell" type="button" data-cell="0" aria-label="Row 1, column 1"></button>
+      <button class="cell" type="button" data-cell="1" aria-label="Row 1, column 2"></button>
+      <button class="cell" type="button" data-cell="2" aria-label="Row 1, column 3"></button>
+      <button class="cell" type="button" data-cell="3" aria-label="Row 2, column 1"></button>
+      <button class="cell" type="button" data-cell="4" aria-label="Row 2, column 2"></button>
+      <button class="cell" type="button" data-cell="5" aria-label="Row 2, column 3"></button>
+      <button class="cell" type="button" data-cell="6" aria-label="Row 3, column 1"></button>
+      <button class="cell" type="button" data-cell="7" aria-label="Row 3, column 2"></button>
+      <button class="cell" type="button" data-cell="8" aria-label="Row 3, column 3"></button>
+    </div>
+
+    <div class="actions">
+      <button class="reset-button" id="new-round" type="button">
+        <span aria-hidden="true">↻</span> New round
+      </button>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const winningLines = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+      const cells = [...document.querySelectorAll(".cell")];
+      const modeButtons = [...document.querySelectorAll(".mode-button")];
+      const status = document.querySelector("#status");
+      const difficultySelect = document.querySelector("#difficulty");
+      const scores = { X: 0, O: 0 };
+      let board = Array(9).fill("");
+      let currentPlayer = "X";
+      let mode = "ai";
+      let difficulty = "medium";
+      let round = 1;
+      let gameOver = false;
+
+      function winnerFor(state) {
+        for (const line of winningLines) {
+          const [first, second, third] = line;
+          if (state[first] && state[first] === state[second] && state[first] === state[third]) {
+            return { mark: state[first], line };
+          }
+        }
+        return null;
+      }
+
+      function playerName(mark) {
+        if (mode === "ai" && mark === "O") return "Computer";
+        return mark === "X" ? "Player 1" : "Player 2";
+      }
+
+      function setStatus(message) {
+        status.innerHTML = message;
+      }
+
+      function render() {
+        cells.forEach((cell, index) => {
+          const mark = board[index];
+          cell.textContent = mark;
+          cell.classList.toggle("x", mark === "X");
+          cell.classList.toggle("o", mark === "O");
+          cell.disabled = gameOver || Boolean(mark) || (mode === "ai" && currentPlayer === "O");
+          const row = Math.floor(index / 3) + 1;
+          const column = (index % 3) + 1;
+          cell.setAttribute("aria-label", `Row ${row}, column ${column}${mark ? `, ${mark}` : ", empty"}`);
+        });
+
+        document.querySelector("#score-x").textContent = scores.X;
+        document.querySelector("#score-o").textContent = scores.O;
+        document.querySelector("#name-o").textContent = playerName("O");
+        difficultySelect.disabled = mode !== "ai";
+        document.querySelector("#player-x").classList.toggle("active", !gameOver && currentPlayer === "X");
+        document.querySelector("#player-o").classList.toggle("active", !gameOver && currentPlayer === "O");
+        document.querySelector("#round-label").textContent = `Round ${round}`;
+      }
+
+      function finishGame(result) {
+        gameOver = true;
+        if (result) {
+          scores[result.mark] += 1;
+          result.line.forEach(index => cells[index].classList.add("winning"));
+          const name = playerName(result.mark);
+          const markClass = result.mark.toLowerCase();
+          setStatus(`<span class="${markClass}">${name} (${result.mark})</span> wins this round`);
+        } else {
+          setStatus("It's a draw. Nicely matched.");
+        }
+        render();
+      }
+
+      function makeMove(index) {
+        if (gameOver || board[index] || (mode === "ai" && currentPlayer === "O")) return;
+        board[index] = currentPlayer;
+        const result = winnerFor(board);
+        if (result) {
+          finishGame(result);
+          return;
+        }
+        if (board.every(Boolean)) {
+          finishGame(null);
+          return;
+        }
+
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        if (mode === "ai" && currentPlayer === "O") {
+          render();
+          setStatus("Computer is thinking...");
+          window.setTimeout(() => {
+            if (!gameOver && mode === "ai" && currentPlayer === "O") {
+              board[chooseAIMove(board)] = "O";
+              const aiResult = winnerFor(board);
+              if (aiResult) finishGame(aiResult);
+              else if (board.every(Boolean)) finishGame(null);
+              else {
+                currentPlayer = "X";
+                setStatus("Your turn, <span class=\"x\">X</span>");
+                render();
+              }
+            }
+          }, 320);
+          return;
+        }
+
+        setStatus(`${playerName(currentPlayer)}'s turn`);
+        render();
+      }
+
+      function bestMove(state) {
+        let bestScore = -Infinity;
+        let move = -1;
+        state.forEach((value, index) => {
+          if (value) return;
+          state[index] = "O";
+          const score = minimax(state, false, 0);
+          state[index] = "";
+          if (score > bestScore) {
+            bestScore = score;
+            move = index;
+          }
+        });
+        return move;
+      }
+
+      function chooseAIMove(state) {
+        if (difficulty === "easy") return randomMove(state);
+        if (difficulty === "hard") return bestMove(state);
+
+        const winningMove = findWinningMove(state, "O");
+        if (winningMove !== -1) return winningMove;
+        const blockingMove = findWinningMove(state, "X");
+        return blockingMove !== -1 ? blockingMove : randomMove(state);
+      }
+
+      function findWinningMove(state, mark) {
+        for (let index = 0; index < state.length; index += 1) {
+          if (state[index]) continue;
+          state[index] = mark;
+          const result = winnerFor(state);
+          state[index] = "";
+          if (result && result.mark === mark) return index;
+        }
+        return -1;
+      }
+
+      function randomMove(state) {
+        const available = state
+          .map((mark, index) => mark ? -1 : index)
+          .filter(index => index !== -1);
+        return available[Math.floor(Math.random() * available.length)];
+      }
+
+      function minimax(state, maximizing, depth) {
+        const result = winnerFor(state);
+        if (result) return result.mark === "O" ? 10 - depth : depth - 10;
+        if (state.every(Boolean)) return 0;
+
+        let bestScore = maximizing ? -Infinity : Infinity;
+        for (let index = 0; index < state.length; index += 1) {
+          if (state[index]) continue;
+          state[index] = maximizing ? "O" : "X";
+          const score = minimax(state, !maximizing, depth + 1);
+          state[index] = "";
+          bestScore = maximizing ? Math.max(bestScore, score) : Math.min(bestScore, score);
+        }
+        return bestScore;
+      }
+
+      function startRound(incrementRound = false) {
+        if (incrementRound) round += 1;
+        board = Array(9).fill("");
+        currentPlayer = "X";
+        gameOver = false;
+        cells.forEach(cell => cell.classList.remove("winning"));
+        setStatus(mode === "ai" ? "Your turn, <span class=\"x\">X</span>" : "Player 1's turn");
+        render();
+      }
+
+      cells.forEach((cell, index) => cell.addEventListener("click", () => makeMove(index)));
+      document.querySelector("#new-round").addEventListener("click", () => startRound(true));
+      modeButtons.forEach(button => button.addEventListener("click", () => {
+        mode = button.dataset.mode;
+        modeButtons.forEach(option => option.setAttribute("aria-pressed", String(option === button)));
+        startRound();
+      }));
+      difficultySelect.addEventListener("change", () => {
+        difficulty = difficultySelect.value;
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
